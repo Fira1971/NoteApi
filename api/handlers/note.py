@@ -10,6 +10,9 @@ def get_note_by_id(note_id):
     # TODO: авторизованный пользователь может получить только свою заметку или публичную заметку других пользователей
     #  Попытка получить чужую приватную заметку, возвращает ответ с кодом 403
     user = multi_auth.current_user()
+    # if user:
+    #     return NoteModel.query.filter_by(author_id=note.author_id).get(note_id), NoteModel.query.filter_by(author_id=note.author_id).all()
+
     note = get_object_or_404(NoteModel, note_id)
     return note_schema.dump(note), 200
 

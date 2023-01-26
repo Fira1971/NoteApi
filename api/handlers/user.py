@@ -22,7 +22,9 @@ def get_users():
 def create_user():
     user_data = request.json
     user = UserModel(**user_data)
-    # TODO: добавить обработчик на создание пользователя с неуникальным username
+    # добавлен обработчик на создание пользователя с неуникальным username
+    if UserModel.query.filter_by(username=user.username).one_or_none():
+        return {"error": "User already exists"}, 409
     user.save()
     return user_schema.dump(user), 201
 
@@ -43,4 +45,6 @@ def delete_user(user_id):
     """
     Пользователь может удалять ТОЛЬКО свои заметки
     """
-    raise NotImplemented("Метод не реализован")
+    user = get_object_or_404(UserModel, user_id)
+    user.delete()
+    return {"message": f"User with id={user_id} has deleted"}, 200
