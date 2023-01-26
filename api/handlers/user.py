@@ -42,9 +42,6 @@ def edit_user(user_id):
 @app.route("/users/<int:user_id>", methods=["DELETE"])
 @multi_auth.login_required(role="admin")
 def delete_user(user_id):
-    """
-    Пользователь может удалять ТОЛЬКО свои заметки
-    """
     user = get_object_or_404(UserModel, user_id)
     user.delete()
     return {"message": f"User with id={user_id} has deleted"}, 200

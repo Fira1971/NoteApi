@@ -53,6 +53,11 @@ def edit_note(note_id):
 @app.route("/notes/<int:note_id>", methods=["DELETE"])
 @multi_auth.login_required
 def delete_note(self, note_id):
+    note = get_object_or_404(NoteModel, note_id)
+
+    note.delete()
+    return {"message": f"Note with id={note_id} has deleted"}, 200
+
     # TODO: Пользователь может удалять ТОЛЬКО свои заметки.
     #  Попытка удалить чужую заметку, возвращает ответ с кодом 403
-    raise NotImplemented("Метод не реализован")
+    # raise NotImplemented("Метод не реализован")
