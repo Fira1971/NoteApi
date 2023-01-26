@@ -7,23 +7,26 @@ from utility.helpers import get_object_or_404
 @app.route("/notes/<int:note_id>", methods=["GET"])
 @multi_auth.login_required
 def get_note_by_id(note_id):
-    # TODO: авторизованный пользователь может получить только свою заметку или публичную заметку других пользователей
+    # Авторизованный пользователь может получить только свою заметку или публичную заметку других пользователей
     #  Попытка получить чужую приватную заметку, возвращает ответ с кодом 403
     user = multi_auth.current_user()
-    # if user:
-    #     return NoteModel.query.filter_by(author_id=note.author_id).get(note_id), NoteModel.query.filter_by(author_id=note.author_id).all()
-
-    note = get_object_or_404(NoteModel, note_id)
-    return note_schema.dump(note), 200
+    if user:
+        note = get_object_or_404(NoteModel, note_id)
+        if note.author_id == user.id or (note.author_id != user.id and note.private == False): 
+            return note_schema.dump(note), 200
+        return {"error": "This note can't be showed"}, 403
 
 
 @app.route("/notes", methods=["GET"])
 @multi_auth.login_required
 def get_notes():
-    # TODO: авторизованный пользователь получает только свои заметки и публичные заметки других пользователей
+    # Авторизованный пользователь получает только свои заметки и публичные заметки других пользователей
     user = multi_auth.current_user()
-    notes = NoteModel.query.all()
-    return notes_schema.dump(notes), 200
+    if user:    
+        notes = NoteModel.query.all()
+        if notes.author_id == user.id or (notes.author_id != user.id and notes.private == False): 
+            return note_schema.dump(notes), 200
+    return {"error": "This note can't be showed"}, 403
 
 
 @app.route("/notes", methods=["POST"])
@@ -39,25 +42,30 @@ def create_note():
 @app.route("/notes/<int:note_id>", methods=["PUT"])
 @multi_auth.login_required
 def edit_note(note_id):
-    # TODO: Пользователь может редактировать ТОЛЬКО свои заметки.
+    #  Пользователь может редактировать ТОЛЬКО свои заметки.
     #  Попытка редактировать чужую заметку, возвращает ответ с кодом 403
-    author = multi_auth.current_user()
-    note = get_object_or_404(NoteModel, note_id)
-    note_data = request.json
-    note.text = note_data["text"]
-    note.private = note_data.get("private") or note.private
-    note.save()
-    return note_schema.dump(note), 200
-
+    user = multi_auth.current_user()
+    if user:
+        note = get_object_or_404(NoteModel, note_id)
+        if note.author_id == user.id:
+            note_data = request.json
+            note.text = note_data["text"]
+            note.private = note_data.get("private") or note.private
+            note.save()
+            return note_schema.dump(note), 200
+        return {"error": "This note can't be changed, because it owned other person"}, 403
 
 @app.route("/notes/<int:note_id>", methods=["DELETE"])
 @multi_auth.login_required
 def delete_note(self, note_id):
-    note = get_object_or_404(NoteModel, note_id)
+    # Пользователь может удалять ТОЛЬКО свои заметки.
+    # Попытка удалить чужую заметку, возвращает ответ с кодом 403
+    user = multi_auth.current_user()
+    if user:
+        note = get_object_or_404(NoteModel, note_id)
+        if note.author_id == user.id:
+            note.delete()
+            return {"message": f"Note with id={note_id} has deleted"}, 200
+        return {"error": "This note can't be changed, because it owned other person"}, 403    
 
-    note.delete()
-    return {"message": f"Note with id={note_id} has deleted"}, 200
-
-    # TODO: Пользователь может удалять ТОЛЬКО свои заметки.
-    #  Попытка удалить чужую заметку, возвращает ответ с кодом 403
-    # raise NotImplemented("Метод не реализован")
+    

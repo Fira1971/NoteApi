@@ -43,7 +43,7 @@ def test_note_get_by_id(client, note, auth_headers):
 
 
 def test_note_not_found(client, note, auth_headers):
-    response = client.get('/notes/2', headers=auth_headers)
+    response = client.get('/notes/100', headers=auth_headers)
     assert response.status_code == 404
 
 
@@ -75,7 +75,9 @@ def test_note_edit(client, note_admin, auth_headers):
     assert data["text"] == note_edit_data["text"]
 
 
-@pytest.mark.skip(reason="test not implemented")
+# @pytest.mark.skip(reason="test not implemented")
 def test_note_delete(client, auth_headers):
-    pass
-    # TODO: реализуйте тест на удаление заметки и запустите его, убрав декоратор @pytest.mark.skip
+    # Реализуйте тест на удаление заметки и запустите его, убрав декоратор @pytest.mark.skip
+    response = client.get('/notes/1', headers=auth_headers)
+    response = client.delete()
+    assert response.status_code == 200
