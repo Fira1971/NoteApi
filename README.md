@@ -10,4 +10,4 @@
 1. Применить миграции: flask db upgrade
 
 # Автотесты
-1. Запуск: pytest -v tests
+1. Запуск: pytest -v tests# NoteApi
