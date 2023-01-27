@@ -1,11 +1,14 @@
+from flask_apispec import doc, marshal_with
 from api import app, multi_auth, request
 from api.models.note import NoteModel
 from api.models.user import UserModel
-from api.schemas.note import note_schema, notes_schema
+from api.schemas.note import NoteSchema, note_schema, notes_schema
 from utility.helpers import get_object_or_404
 
 
 @app.route("/notes/<int:note_id>", methods=["GET"])
+@doc(description='Api for notes.', tags=['Notes'], summary="Get note by id")
+@marshal_with(NoteSchema, code=200)
 @multi_auth.login_required
 def get_note_by_id(note_id):
     # Авторизованный пользователь может получить только свою заметку или публичную заметку других пользователей
@@ -15,7 +18,7 @@ def get_note_by_id(note_id):
     notes = NoteModel.query.join(NoteModel.author).filter((
         UserModel.id == user.id) | (NoteModel.private == False))
     if note in notes:
-        return note_schema.dump(note), 200
+        return note, 200
     return {"error": "This note can't be showed"}, 403
 
     # note = get_object_or_404(NoteModel, note_id)
@@ -25,16 +28,20 @@ def get_note_by_id(note_id):
 
 
 @app.route("/notes", methods=["GET"])
+@doc(description='Api for notes.', tags=['Notes'], summary="Get all user's notes and not-private notes")
+@marshal_with(NoteSchema, code=200)
 @multi_auth.login_required
 def get_notes():
     # Авторизованный пользователь получает только свои заметки и публичные заметки других пользователей
     user = multi_auth.current_user()
     notes = NoteModel.query.join(NoteModel.author).filter((
         UserModel.id == user.id) | (NoteModel.private == False))
-    return note_schema.dump(notes), 200
+    return notes, 200
 
 
 @app.route("/notes", methods=["POST"])
+@doc(description='Api for notes.', tags=['Notes'], summary="Create new user's note")
+# @marshal_with(NoteSchema, code=200)
 @multi_auth.login_required
 def create_note():
     user = multi_auth.current_user()
