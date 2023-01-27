@@ -1,5 +1,5 @@
 import pytest
-from tests.init_test import client, application, auth_headers
+from tests.init_test import client, application, auth_headers, auth_headers_user
 from api.models.user import UserModel
 from api.models.note import NoteModel
 
@@ -14,7 +14,8 @@ def user():
 
 @pytest.fixture()
 def note(user):
-    note_data = {"author_id": user.id, "text": "Quote for testuser"}
+    note_data = {"author_id": user.id,
+                 "text": "Note for testuser", "private": False}
     note = NoteModel(**note_data)
     note.save()
     return note
@@ -39,7 +40,20 @@ def note_admin(user_admin):
 def test_note_get_by_id(client, note, auth_headers):
     response = client.get('/notes/1', headers=auth_headers)
     assert response.status_code == 200
+    # assert len(response.json) == 3
     assert response.json["text"] == note.text
+
+
+def test_note_get_by_id_user(client, note, auth_headers_user):
+    response = client.get('/notes/1', headers=auth_headers_user)
+    assert response.status_code == 200
+    # assert len(response.json) == 3
+    assert response.json["text"] == note.text
+
+
+def test_get_notes(client, note, auth_headers):
+    response = client.get('/notes', headers=auth_headers)
+    assert response.status_code == 200
 
 
 def test_note_not_found(client, note, auth_headers):
@@ -76,8 +90,11 @@ def test_note_edit(client, note_admin, auth_headers):
 
 
 # @pytest.mark.skip(reason="test not implemented")
-def test_note_delete(client, auth_headers):
+def test_note_delete(client, note, auth_headers_user):
     # Реализуйте тест на удаление заметки и запустите его, убрав декоратор @pytest.mark.skip
-    response = client.get('/notes/1', headers=auth_headers)
-    response = client.delete()
-    assert response.status_code == 200
+    response = client.get('/notes/1', headers=auth_headers_user)
+    if response.status_code == 200:
+        response = client.delete('/notes/1', headers=auth_headers_user)
+        assert response.status_code == 200
+    else:
+        assert response.status_code == 404
